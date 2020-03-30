@@ -20,15 +20,15 @@ module priority_queue_tb();
 
   priority_queue 
   #(
-    QUEUE_DETH  = QUEUE_DETH,
-    DATA_LENGTH = DATA_LENGTH
+    QUEUE_DETH,
+    DATA_LENGTH
   ) u_prty_queue (.*);
 
 
   initial begin: CLK_GENERATION
     CLK = 0;
 
-    always #(`CLK_PERIOD/2)
+    forever #(`CLK_PERIOD/2)
       CLK = !CLK;
   end
 
@@ -49,6 +49,7 @@ module priority_queue_tb();
     i_data  = 0;
 
     @(posedge RSTn);
+    @(posedge CLK);
 
     write(12);
     write(1);
@@ -59,14 +60,16 @@ module priority_queue_tb();
     read(data);
     read(data);
     read(data);
+
+    $finish();
   end
 
 
   task write(input int data);
     if(o_full)
-      $display("Error - The queue is full");
+      $display("Error - The queue is full | Data: %d", data);
     else
-      $display("Write data: %h", data);
+      $display("Write data: %d", data);
 
     i_write = 1;
     i_valid = !o_full;
@@ -78,9 +81,6 @@ module priority_queue_tb();
   endtask
 
   task read(output int data);
-    if(o_empty)
-      $display("Error - The queue is empty");
-
     i_write = 0;
     i_valid = !o_empty;
 
@@ -88,12 +88,12 @@ module priority_queue_tb();
 
     i_valid = 0;
 
-    data    = o_valid ? o_data:`hx;
+    data    = o_valid ? o_data:'hx;
 
     if(o_valid)
-      $display("Read data: %h", data);
+      $display("Read data: %d", data);
     else
-      $display("Error in read operation");
+      $display("Error - The queue is empty");
   endtask
 
 endmodule
