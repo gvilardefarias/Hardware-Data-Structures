@@ -28,6 +28,9 @@ module priority_queue
   logic                        write;
   logic                        valid;
 
+  logic                        empty;
+  logic                        full;
+
 
   always_comb begin 
     pos_data = it_ff;
@@ -42,21 +45,21 @@ module priority_queue
     it_nx    = it_ff;
     queue_nx = queue_ff;
 
-    if(valid && write && !o_full) begin: WRITE_OP
-      it_nx              = it_ff + `d1;
+    if(valid && write && !full) begin: WRITE_OP
+      it_nx              = it_ff + 'd1;
 
       queue_nx[pos_data] = data;
 
-      for(int i=QUEUE_DETH-1;i>=0;i--) begin
+      for(int i=QUEUE_DETH-1;i>0;i--) begin
         if(i > pos_data)
           queue_nx[i] = queue_ff[i-1];
       end
     end
-    else if (valid && !write && !o_empty) begin: READ_OP
-      it_nx              = it_ff - `d1;
+    else if (valid && !write && !empty) begin: READ_OP
+      it_nx              = it_ff - 'd1;
       
       for(int i=QUEUE_DETH-2;i>=0;i--) begin
-        if(i < it_ff - `d1)
+        if(i < it_ff - 'd1)
           queue_nx[i] = queue_ff[i+1];
       end
     end
@@ -65,13 +68,13 @@ module priority_queue
 
   always_ff @(posedge CLK, negedge RSTn) begin: REGISTER_DATA
     if(!RSTn) begin
-      it_ff    <= `d0;
+      it_ff    <= 'd0;
 
-      queue_ff <= `{default:0};
+      queue_ff <= '{default:0};
 
-      data     <= `d0;
-      write    <= 1`b0;
-      valid    <= 1`b0;
+      data     <= 'd0;
+      write    <= 1'b0;
+      valid    <= 1'b0;
     end
     else begin
       it_ff    <= it_nx;
@@ -85,10 +88,13 @@ module priority_queue
   end
 
 
-  assign o_data  = queue_ff[0];
-  assign o_valid = valid && !write && !o_empty;
+  assign empty   = it_ff == 'd0;
+  assign full    = it_ff == QUEUE_DETH;
 
-  assign o_empty = it_ff == `d0;
-  assign o_full  = it_ff == QUEUE_DETH;
+  assign o_empty = it_nx == 'd0;
+  assign o_full  = it_nx == QUEUE_DETH;
+
+  assign o_data  = queue_ff[0];
+  assign o_valid = valid && !write && !empty;
 
 endmodule
