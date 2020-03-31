@@ -1,6 +1,8 @@
+`define CLK_PERIOD 10
+
 module priority_queue_tb();
 
-  localparam QUEUE_DETH  = 32;
+  localparam QUEUE_DETH  = 10;
   localparam DATA_LENGTH = 32;
 
   logic                   CLK;
@@ -55,7 +57,19 @@ module priority_queue_tb();
     write(1);
     write(2);
     write(14);
+    write(12);
+    write(3);
+    write(0);
+    write(20);
+    write(25);
+    write(13);
 
+    read(data);
+    read(data);
+    read(data);
+    read(data);
+    read(data);
+    read(data);
     read(data);
     read(data);
     read(data);
@@ -88,7 +102,7 @@ module priority_queue_tb();
 
     i_valid = 0;
 
-    data    = o_valid ? o_data:'hx;
+    data    = o_data;
 
     if(o_valid)
       $display("Read data: %d", data);
