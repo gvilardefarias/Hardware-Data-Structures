@@ -1,7 +1,7 @@
 module priority_queue 
 #(
-  QUEUE_DETH  = 32,
-  DATA_LENGTH = 32
+  QUEUE_DETH  = 30,
+  DATA_LENGTH = 10
 )
 (
   input  logic                   CLK,
@@ -22,7 +22,7 @@ module priority_queue
 
   logic [$clog2(QUEUE_DETH):0] it_ff, it_nx;  // iterator
 
-  logic [$clog2(QUEUE_DETH):0] pos_data;      // decide the local to the new data
+  logic [0:QUEUE_DETH-1]       comparator;    // comparator to decide the local to put new data
 
   logic [DATA_LENGTH-1:0]      data;
   logic                        write;
@@ -33,11 +33,11 @@ module priority_queue
 
 
   always_comb begin 
-    pos_data = it_ff;
-
     for(int i=QUEUE_DETH-1;i>=0;i--) begin
-      if(data < queue_ff[i])
-        pos_data = i;
+      if((data < queue_ff[i] && i < it_ff) || i == it_ff)  // if the data is smaller then the data in the queue length
+        comparator[i] = 1'b1;
+      else
+        comparator[i] = 1'b0;
     end
   end
 
@@ -46,20 +46,23 @@ module priority_queue
     queue_nx = queue_ff;
 
     if(valid && write && !full) begin: WRITE_OP
-      it_nx              = it_ff + 'd1;
-
-      queue_nx[pos_data] = data;
+      it_nx = it_ff + 1'd1;
 
       for(int i=QUEUE_DETH-1;i>0;i--) begin
-        if(i > pos_data)
+        if(comparator[i] && !comparator[i-1])  // the edge that changes to bigger to smaller to receive the data
+          queue_nx[i] = data;
+        else if(comparator[i-1])               // if in pos-1 the value is smaller then shift to right
           queue_nx[i] = queue_ff[i-1];
       end
+
+      if(comparator[0])
+        queue_nx[0] = data;
     end
     else if (valid && !write && !empty) begin: READ_OP
-      it_nx              = it_ff - 'd1;
+      it_nx = it_ff - 1'd1;
       
       for(int i=QUEUE_DETH-2;i>=0;i--) begin
-        if(i < it_ff - 'd1)
+        if(i < it_ff - 1'd1)
           queue_nx[i] = queue_ff[i+1];
       end
     end
