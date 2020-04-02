@@ -1,8 +1,7 @@
 module fifo
 	#(
 		parameter SIZEDATA = 32,
-		parameter DEPTHFIFO = 8,
-		localparam BITSCONT = $clog2(DEPTHFIFO)
+		parameter DEPTHFIFO = 8
 	)(
 		input  logic clk_i,
 		input  logic rstn_i,
@@ -15,6 +14,8 @@ module fifo
 		output logic [SIZEDATA-1:0]data_o,
 		input  logic ready_i
 	);
+	
+	localparam BITSCONT = $clog2(DEPTHFIFO)
 
 	logic [SIZEDATA-1:0]  registradores [DEPTHFIFO];
 	logic [BITSCONT-1:0]  cont_w;
